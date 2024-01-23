@@ -4,7 +4,7 @@ const { Client } = require('whatsapp-web.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const ejs = require('ejs');
-const path  = require('path');
+const path = require('path');
 
 dotenv.config();
 
@@ -21,19 +21,34 @@ const client = new Client({
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// Boolean flag to track if the client is ready
+let isClientReady = false;
+// ... (same as before)
+
 app.get('/zap', async (req, res) => {
-  if (client.isReady) {
-    try {
-      await client.sendMessage('558788210009@c.us', 'FALA MARCAO SOU ROBO');
-      return res.json({ ok: true });
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error.message);
-      return res.json({ ok: false, error: 'Erro ao enviar mensagem' });
+  try {
+    const { number, message } = req.query;
+
+    // Check if the client is ready
+    if (isClientReady) {
+      // Check if the required parameters are provided
+      if (!number || !message) {
+        return res.render('zap', { error: 'Número e mensagem são obrigatórios',sucess:null  });
+      }
+
+      // Send a message
+      await client.sendMessage(`${number}@c.us`, message);
+
+      return res.render('zap', { success: 'Mensagem enviada com sucesso', number,error:null  });
+    } else {
+      return res.render('zap', { error: 'O cliente não está pronto ainda',sucess:null  });
     }
-  } else {
-    return res.json({ ok: false, error: 'O cliente não está pronto ainda' });
+  } catch (error) {
+    console.error('Erro ao enviar mensagem:', error.message);
+    return res.render('zap', { error: 'Erro ao enviar mensagem',sucess:null });
   }
 });
+
 
 app.get('/qr', async (req, res) => {
   try {
@@ -58,18 +73,26 @@ app.get('/qr', async (req, res) => {
   }
 });
 
+
+
+
+
 app.listen(PORT, () => {
   console.log(`Servidor ligado na porta ${PORT}`);
 });
 
-
 client.on('ready', () => {
   console.log('Cliente pronto!');
-});
+  // Set the flag to indicate that the client is ready
+  isClientReady = true;
 
+   
+  
+});
 
 client.on('error', (err) => {
   console.error('Ocorreu um erro:', err);
 });
 
+// Initialize the client after setting up event listeners
 client.initialize();
