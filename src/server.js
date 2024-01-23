@@ -4,6 +4,7 @@ const { Client } = require('whatsapp-web.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const ejs = require('ejs');
+const path  = require('path');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ const client = new Client({
   },
 });
 
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.get('/zap', async (req, res) => {
@@ -34,29 +36,37 @@ app.get('/zap', async (req, res) => {
 });
 
 app.get('/qr', async (req, res) => {
-  const qr = await client.generateInviteLink();
-  qrcode.toDataURL(qr, (err, dataUrl) => {
-    if (err) {
-      console.error('Erro ao gerar QR Code:', err);
-      res.status(500).send('Erro ao gerar QR Code');
-    } else {
-      res.render('qr', { qrImage: dataUrl });
-    }
-  });
+  try {
+    let qr = await new Promise((resolve, reject) => {
+      client.once('qr', (qr) => {
+        qrcode.toDataURL(qr, (err, dataUrl) => {
+          if (err) {
+            console.error('Erro ao gerar QR Code:', err);
+            return res.status(500).send('Erro ao gerar QR Code');
+          } else {
+            res.render('qr', { qrImage: dataUrl });
+            resolve(); // Resolve a promessa após renderizar
+          }
+        });
+      });
+      setTimeout(() => {
+        reject(new Error("QR event wasn't emitted in 15 seconds."));
+      }, 15000);
+    });
+  } catch (err) {
+    res.send(err.message);
+  }
 });
 
 app.listen(PORT, () => {
   console.log(`Servidor ligado na porta ${PORT}`);
 });
 
-client.on('qr', (qr) => {
-  qrcode.generate(qr, { small: true });
-});
 
 client.on('ready', () => {
   console.log('Cliente pronto!');
-  fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(client.getSession()));
 });
+
 
 client.on('error', (err) => {
   console.error('Ocorreu um erro:', err);
