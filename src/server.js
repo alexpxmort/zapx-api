@@ -1,16 +1,15 @@
 const express = require('express');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const { Client } = require('whatsapp-web.js');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const ejs = require('ejs');
 
 dotenv.config();
-
 
 const app = express();
 const SESSION_FILE_PATH = 'session.json';
 const PORT = process.env.PORT || 4000;
-
 
 const client = new Client({
   puppeteer: {
@@ -26,6 +25,8 @@ try {
   console.log('Não foi possível carregar a sessão:', err.message);
 }
 
+app.set('view engine', ejs); // Configura o mecanismo de visualização EJS
+
 app.get('/zap', async (req, res) => {
   if (client.isReady) {
     try {
@@ -40,13 +41,28 @@ app.get('/zap', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log('Servidor ligado na porta 4000');
+app.get('/qr', (req, res) => {
+  if (client.isReady) {
+    const qr = client.generateInviteCode();
+    qrcode.toDataURL(qr, (err, dataUrl) => {
+      if (err) {
+        console.error('Erro ao gerar QR Code:', err);
+        res.status(500).send('Erro ao gerar QR Code');
+      } else {
+        // Renderiza a página HTML com o QR Code
+        res.render('qr', { qrImage: dataUrl });
+      }
+    });
+  } else {
+    res.status(500).send('O cliente não está pronto ainda');
+  }
 });
 
-client.on('qr', (qr) => {
-  qrcode.generate(qr, { small: true });
+app.listen(PORT, () => {
+  console.log(`Servidor ligado na porta ${PORT}`);
 });
+
+
 
 client.on('ready', () => {
   console.log('Cliente pronto!');
