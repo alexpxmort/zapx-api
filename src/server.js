@@ -42,7 +42,6 @@ app.get('/zap', async (req, res) => {
 });
 
 app.get('/qr', (req, res) => {
-  if (client.isReady) {
     const qr = client.generateInviteCode();
     qrcode.toDataURL(qr, (err, dataUrl) => {
       if (err) {
@@ -53,9 +52,7 @@ app.get('/qr', (req, res) => {
         res.render('qr', { qrImage: dataUrl });
       }
     });
-  } else {
-    res.status(500).send('O cliente não está pronto ainda');
-  }
+
 });
 
 app.listen(PORT, () => {
