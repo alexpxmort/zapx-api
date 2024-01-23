@@ -45,9 +45,9 @@ RUN apt-get update && \
     wget && \
     rm -rf /var/lib/apt/lists/*
 
-COPY package.json yarn.lock /app/
+COPY package.json  /app/
 
-RUN yarn install
+RUN npm install
 
 COPY . /app
 
