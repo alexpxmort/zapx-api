@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send WhatsApp Message</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,10 +48,19 @@
       border-radius: 4px;
       cursor: pointer;
       width: 100%;
+      position: relative; /* Adiciona posição relativa para o botão */
     }
 
     button:hover {
       background-color: #45a049;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none; /* Inicialmente oculto */
     }
 
     /* Estilos para o campo de seleção de arquivo */
@@ -61,6 +71,10 @@
     #csvFileLabel {
       display: block;
       margin-bottom: 8px;
+    }
+
+    #progress {
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -80,7 +94,39 @@
     <label id="csvFileLabel" for="csvFile">Arquivo CSV:</label>
     <input type="file" id="csvFile" name="csvFile" accept=".csv">
 
-    <button type="submit">Enviar</button>
+    <!-- Adicionando ícone de loading -->
+    <button type="submit">
+      Enviar
+      <i class="fas fa-spinner fa-spin loading"></i>
+    </button>
+
+    <div id="progress">
+      <% if (progress.total > 0) { %>
+        Progresso: <%= progress.current %> de <%= progress.total %>
+      <% } %>
+    </div>
+
   </form>
+  <script>
+      function startPolling() {
+        // Inicia o polling para verificar o progresso a cada 5 segundos
+        setInterval(updateProgress, 5000);
+      }
+
+      async function updateProgress() {
+        try {
+          // Faz uma requisição AJAX para obter o progresso atual
+          const response = await fetch('/get-progress');
+          const progressData = await response.json();
+
+          // Atualiza o elemento de progresso na página
+          const progressElement = document.getElementById('progress');
+          progressElement.innerHTML = `Progresso: ${progressData.current} de ${progressData.total}`;
+        } catch (error) {
+          console.error('Erro ao obter progresso:', error);
+        }
+      }
+    </script>
+
 </body>
 </html>

@@ -6,6 +6,7 @@ const ejs = require('ejs');
 const path = require('path');
 const multer = require('multer');
 const csvtojson = require('csvtojson');
+const http = require('http');
 
 dotenv.config();
 
@@ -22,20 +23,28 @@ const csvToJSON = async (csvFileBuffer) => {
 
   return jsonData;
 };
+// Função para enviar mensagens com base nos dados JSON e nas colunas selecionadas
+const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
+  progress = { current: 0, total: jsonData.length };
 
-// Função para enviar mensagens com base nos dados JSON
-const sendMessagesFromJSON = async (jsonData, message) => {
-  for (const contact of jsonData) {
-    console.log(contact)
-    const { Phone,Nome } = contact;
+  for (const [index, contact] of jsonData.entries()) {
 
-    console.log(`${Phone}@c.us`)
+    // Envia a mensagem concatenada para o número de telefone
+    await client.sendMessage(`${contact.Phone}@c.us`, `${message}`);
 
-    // Envia a mensagem para o número de telefone
-    await client.sendMessage(`${Phone}@c.us`, `${message} ${Nome}`);
+    // Atualiza o progresso
+    progress.current = index + 1;
+
+    // Aguarda 3 minutos antes do próximo envio
+    if (index < jsonData.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 3 * 60 * 1000));
+    }
   }
 };
 const app = express();
+
+const server = http.createServer(app);
+const io = require('socket.io')(server);
 const SESSION_FILE_PATH = 'session.json';
 const PORT = process.env.PORT || 4000;
 
@@ -50,7 +59,16 @@ app.set('view engine', 'ejs');
 
 // Boolean flag to track if the client is ready
 let isClientReady = false;
-// ... (same as before)
+let progress = { current: 0, total: 0 };
+
+
+
+
+// Adicione esta rota ao código do servidor
+app.get('/get-progress', (req, res) => {
+  // Retorna os dados de progresso como JSON
+  res.json(progress);
+});
 
 app.get('/zap', async (req, res) => {
   try {
@@ -80,15 +98,24 @@ app.get('/zap', async (req, res) => {
 
 // Rota para renderizar a página de envio de mensagem com CSV
 app.get('/zap-csv', (req, res) => {
-  return res.render('zap-csv', { error: null, success: null });
+  return res.render('zap-csv', { error: null, success: null,progress  });
 });
 
+
+// Configuração do Socket.IO
+io.on('connection', (socket) => {
+  console.log('Client connected');
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
 app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
   try {
     const { message } = req.body;
 
     // Check if the client is ready
-    if (!isClientReady) {
+    if (isClientReady) {
       // Check if the required parameters are provided
       if ( !message) {
         return res.render('zap-csv', { error: 'mensagem é  obrigatória', success: null });
@@ -101,18 +128,18 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
         const jsonData = await csvToJSON(csvFile.buffer);
 
         // Envia mensagens com base nos dados JSON
-        await sendMessagesFromJSON(jsonData, message);
+        await sendMessagesFromJSON(jsonData, message, []);
 
-        return res.render('zap-csv', { success: 'Mensagens enviadas com sucesso', number, error: null });
+        return res.render('zap-csv', { success: 'Mensagens enviadas com sucesso', error: null,progress  });
       } else {
-        return res.render('zap-csv', { error: 'Arquivo CSV não fornecido', success: null });
+        return res.render('zap-csv', { error: 'Arquivo CSV não fornecido', success: null,progress  });
       }
     } else {
-      return res.render('zap-csv', { error: 'O cliente não está pronto ainda', success: null });
+      return res.render('zap-csv', { error: 'O cliente não está pronto ainda', success: null,progress  });
     }
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error.message);
-    return res.render('zap-csv', { error: 'Erro ao enviar mensagem', success: null });
+    return res.render('zap-csv', { error: 'Erro ao enviar mensagem', success: null,progress  });
   }
 });
 
