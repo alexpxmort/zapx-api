@@ -159,7 +159,7 @@ app.get('/qr', async (req, res) => {
       });
       setTimeout(() => {
         reject(new Error("QR event wasn't emitted in 15 seconds."));
-      }, 180000);
+      }, 15000);
     });
   } catch (err) {
     res.send(err.message);
