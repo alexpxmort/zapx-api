@@ -73,7 +73,7 @@ app.get('/get-progress', (req, res) => {
 app.get('/zap', async (req, res) => {
   try {
     const { number, message } = req.query;
-
+console.log(isClientReady)
     // Check if the client is ready
     if (isClientReady) {
       // Check if the required parameters are provided
