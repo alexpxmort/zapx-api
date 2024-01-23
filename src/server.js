@@ -17,15 +17,7 @@ const client = new Client({
   },
 });
 
-// Carregar a sessão salva, se existir
-try {
-  const sessionData = require(SESSION_FILE_PATH);
-  client.loadSession(sessionData);
-} catch (err) {
-  console.log('Não foi possível carregar a sessão:', err.message);
-}
-
-app.set('view engine', ejs); // Configura o mecanismo de visualização EJS
+app.set('view engine', 'ejs');
 
 app.get('/zap', async (req, res) => {
   if (client.isReady) {
@@ -41,29 +33,28 @@ app.get('/zap', async (req, res) => {
   }
 });
 
-app.get('/qr', (req, res) => {
-    const qr = client.generateInviteCode();
-    qrcode.toDataURL(qr, (err, dataUrl) => {
-      if (err) {
-        console.error('Erro ao gerar QR Code:', err);
-        res.status(500).send('Erro ao gerar QR Code');
-      } else {
-        // Renderiza a página HTML com o QR Code
-        res.render('qr', { qrImage: dataUrl });
-      }
-    });
-
+app.get('/qr', async (req, res) => {
+  const qr = await client.generateInviteLink();
+  qrcode.toDataURL(qr, (err, dataUrl) => {
+    if (err) {
+      console.error('Erro ao gerar QR Code:', err);
+      res.status(500).send('Erro ao gerar QR Code');
+    } else {
+      res.render('qr', { qrImage: dataUrl });
+    }
+  });
 });
 
 app.listen(PORT, () => {
   console.log(`Servidor ligado na porta ${PORT}`);
 });
 
-
+client.on('qr', (qr) => {
+  qrcode.generate(qr, { small: true });
+});
 
 client.on('ready', () => {
   console.log('Cliente pronto!');
-  // Salvar a sessão para uso futuro
   fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(client.getSession()));
 });
 
