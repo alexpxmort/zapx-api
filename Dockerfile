@@ -4,7 +4,7 @@ FROM node:lts
 WORKDIR /app
 
 # Copie os arquivos necessários para o diretório de trabalho
-COPY package.json package-lock.json
+COPY package.json yarn.lock
 
 # Instale as dependências
 RUN npm install
