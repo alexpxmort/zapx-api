@@ -1,13 +1,40 @@
 const express = require('express');
 const qrcode = require('qrcode');
 const { Client } = require('whatsapp-web.js');
-const fs = require('fs');
 const dotenv = require('dotenv');
 const ejs = require('ejs');
 const path = require('path');
+const multer = require('multer');
+const csvtojson = require('csvtojson');
 
 dotenv.config();
 
+// Configurações do multer
+const storage = multer.memoryStorage(); // Armazena o arquivo em memória
+const upload = multer({ storage: storage });
+
+// Função para converter o arquivo CSV em JSON
+const csvToJSON = async (csvFileBuffer) => {
+  const csvString = csvFileBuffer.toString('utf-8');
+
+  // Usa csvtojson para converter o CSV em JSON
+  const jsonData = await csvtojson().fromString(csvString);
+
+  return jsonData;
+};
+
+// Função para enviar mensagens com base nos dados JSON
+const sendMessagesFromJSON = async (jsonData, message) => {
+  for (const contact of jsonData) {
+    console.log(contact)
+    const { Phone,Nome } = contact;
+
+    console.log(`${Phone}@c.us`)
+
+    // Envia a mensagem para o número de telefone
+    await client.sendMessage(`${Phone}@c.us`, `${message} ${Nome}`);
+  }
+};
 const app = express();
 const SESSION_FILE_PATH = 'session.json';
 const PORT = process.env.PORT || 4000;
@@ -49,6 +76,45 @@ app.get('/zap', async (req, res) => {
   }
 });
 
+
+
+// Rota para renderizar a página de envio de mensagem com CSV
+app.get('/zap-csv', (req, res) => {
+  return res.render('zap-csv', { error: null, success: null });
+});
+
+app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    // Check if the client is ready
+    if (!isClientReady) {
+      // Check if the required parameters are provided
+      if ( !message) {
+        return res.render('zap-csv', { error: 'mensagem é  obrigatória', success: null });
+      }
+
+      // Processar o arquivo CSV, se disponível
+      const csvFile = req.file;
+      if (csvFile) {
+        // Converte o arquivo CSV em JSON
+        const jsonData = await csvToJSON(csvFile.buffer);
+
+        // Envia mensagens com base nos dados JSON
+        await sendMessagesFromJSON(jsonData, message);
+
+        return res.render('zap-csv', { success: 'Mensagens enviadas com sucesso', number, error: null });
+      } else {
+        return res.render('zap-csv', { error: 'Arquivo CSV não fornecido', success: null });
+      }
+    } else {
+      return res.render('zap-csv', { error: 'O cliente não está pronto ainda', success: null });
+    }
+  } catch (error) {
+    console.error('Erro ao enviar mensagem:', error.message);
+    return res.render('zap-csv', { error: 'Erro ao enviar mensagem', success: null });
+  }
+});
 
 app.get('/qr', async (req, res) => {
   try {
