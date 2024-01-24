@@ -161,7 +161,7 @@ app.get('/qr', async (req, res) => {
       });
       setTimeout(() => {
         reject(new Error("QR event wasn't emitted in 15 seconds."));
-      }, 30000);
+      }, 66000);
     });
   } catch (err) {
     console.error('Erro ao gerar QR Code:', err);
