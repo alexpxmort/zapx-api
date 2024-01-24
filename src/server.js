@@ -1,6 +1,6 @@
 const express = require('express');
 const qrcode = require('qrcode');
-const { Client } = require('whatsapp-web.js');
+const { Client, LocalAuth} = require('whatsapp-web.js');
 const dotenv = require('dotenv');
 const ejs = require('ejs');
 const path = require('path');
@@ -49,7 +49,9 @@ const SESSION_FILE_PATH = 'session.json';
 const PORT = process.env.PORT || 4000;
 
 const client = new Client({
+  authStrategy: new LocalAuth(),
   puppeteer: {
+    headless:'new',
     args: ['--no-sandbox'],
   },
 });
