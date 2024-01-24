@@ -10,6 +10,9 @@ const http = require('http');
 
 dotenv.config();
 
+const app = express();
+
+
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 const SESSION_FILE_PATH = 'session.json';
@@ -49,8 +52,6 @@ const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
     }
   }
 };
-const app = express();
-
 
 
 const client = new Client({
