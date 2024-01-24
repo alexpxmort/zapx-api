@@ -145,17 +145,17 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
   }
 });
 
+
 app.get('/qr', async (req, res) => {
   try {
     let qr = await new Promise((resolve, reject) => {
-      client.once('qr', (qr) => {
+      client.on('qr', (qr) => {
         qrcode.toDataURL(qr, (err, dataUrl) => {
           if (err) {
             console.error('Erro ao gerar QR Code:', err);
             return res.status(500).send('Erro ao gerar QR Code');
           } else {
-            res.render('qr', { qrImage: dataUrl });
-            resolve(); // Resolve a promessa após renderizar
+            return res.render('qr', { qrImage: dataUrl });
           }
         });
       });
@@ -164,9 +164,14 @@ app.get('/qr', async (req, res) => {
       }, 15000);
     });
   } catch (err) {
-    res.send(err.message);
+    console.error('Erro ao gerar QR Code:', err);
+    res.status(500).send('Erro ao gerar QR Code');
   }
 });
+
+
+ 
+            
 
 
 
