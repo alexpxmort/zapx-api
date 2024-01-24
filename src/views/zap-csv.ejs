@@ -98,7 +98,7 @@
     const socket = io()
     // Listen for progress updates
   socket.on('progress', (progress) => {
-    document.getElementById('btn').setAttribute('disabled')
+    document.getElementById('btn').setAttribute('disabled',true)
     updateProgress(progress);
   });
 
