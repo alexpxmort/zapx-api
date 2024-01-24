@@ -73,22 +73,9 @@
       margin-bottom: 8px;
     }
 
-    .progress-container {
-  width: 100%;
-  background-color: #f1f1f1;
-  border-radius: 8px;
-}
-
-.progress-bar {
-  height: 20px;
-  width: 0;
-  background-color: #4caf50;
-  border-radius: 8px;
-  text-align: center;
-  line-height: 20px;
-  color: #fff;
-  transition: width 0.3s ease;
-}
+    #progress {
+      margin-top: 10px;
+    }
 
 button:disabled {
   background-color: #cccccc; /* Cor de fundo quando desativado */
@@ -110,16 +97,11 @@ button:disabled {
   });
 
   function updateProgress(progress) {
-  const progressElement = document.getElementById('progress');
-  const progressBar = document.getElementById('myBar');
-
-  if (progress.total > 0) {
-    const percent = (progress.current / progress.total) * 100;
-    progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total}`;
-    progressBar.style.width = percent + '%';
-    progressBar.innerHTML = Math.round(percent) + '%';
-  }
-} 
+    const progressElement = document.getElementById('progress');
+    if (progress.total > 0) {
+      progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total} enviadas`;
+    }
+  } 
   </script>
 
   <form action="/zap-csv" method="POST" enctype="multipart/form-data">
@@ -143,8 +125,7 @@ button:disabled {
       <i class="fas fa-spinner fa-spin loading"></i>
     </button>
 
-    <div class="progress-container">
-      <div class="progress-bar" id="myBar"></div>
+    <div id="progress">
     </div>
   </form>
 
