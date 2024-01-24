@@ -73,9 +73,23 @@
       margin-bottom: 8px;
     }
 
-    #progress {
-      margin-top: 10px;
-    }
+    .progress-container {
+  width: 100%;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+}
+
+.progress-bar {
+  height: 20px;
+  width: 0;
+  background-color: #4caf50;
+  border-radius: 8px;
+  text-align: center;
+  line-height: 20px;
+  color: #fff;
+  transition: width 0.3s ease;
+}
+
   </style>
 </head>
 <body>
@@ -84,15 +98,21 @@
     const socket = io()
     // Listen for progress updates
   socket.on('progress', (progress) => {
+    document.getElementById('btn').setAttribute('disabled')
     updateProgress(progress);
   });
 
   function updateProgress(progress) {
-    const progressElement = document.getElementById('progress');
-    if (progress.total > 0) {
-      progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total}`;
-    }
-  }   
+  const progressElement = document.getElementById('progress');
+  const progressBar = document.getElementById('myBar');
+
+  if (progress.total > 0) {
+    const percent = (progress.current / progress.total) * 100;
+    progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total}`;
+    progressBar.style.width = percent + '%';
+    progressBar.innerHTML = Math.round(percent) + '%';
+  }
+} 
   </script>
 
   <form action="/zap-csv" method="POST" enctype="multipart/form-data">
@@ -111,14 +131,14 @@
     <input type="file" id="csvFile" name="csvFile" accept=".csv">
 
     <!-- Adicionando ícone de loading -->
-    <button type="submit">
+    <button type="submit" id="'btn">
       Enviar
       <i class="fas fa-spinner fa-spin loading"></i>
     </button>
 
-    <div id="progress">
+    <div class="progress-container">
+      <div class="progress-bar" id="myBar"></div>
     </div>
-
   </form>
 
 </body>
