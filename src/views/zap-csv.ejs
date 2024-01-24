@@ -82,7 +82,19 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io()
+    // Listen for progress updates
+  socket.on('progress', (progress) => {
+    updateProgress(progress);
+  });
+
+  function updateProgress(progress) {
+    const progressElement = document.getElementById('progress');
+    if (progress.total > 0) {
+      progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total}`;
+    }
+  }   
   </script>
+
   <form action="/zap-csv" method="POST" enctype="multipart/form-data">
     <h1>Send WhatsApp Message</h1>
     <% if (error) { %>
@@ -105,32 +117,9 @@
     </button>
 
     <div id="progress">
-      <% if (progress.total > 0) { %>
-        Progresso: <%= progress.current %> de <%= progress.total %>
-      <% } %>
     </div>
 
   </form>
-  <script>
-      function startPolling() {
-        // Inicia o polling para verificar o progresso a cada 5 segundos
-        setInterval(updateProgress, 5000);
-      }
-
-      async function updateProgress() {
-        try {
-          // Faz uma requisição AJAX para obter o progresso atual
-          const response = await fetch('/get-progress');
-          const progressData = await response.json();
-
-          // Atualiza o elemento de progresso na página
-          const progressElement = document.getElementById('progress');
-          progressElement.innerHTML = `Progresso: ${progressData.current} de ${progressData.total}`;
-        } catch (error) {
-          console.error('Erro ao obter progresso:', error);
-        }
-      }
-    </script>
 
 </body>
 </html>

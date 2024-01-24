@@ -10,6 +10,11 @@ const http = require('http');
 
 dotenv.config();
 
+const server = http.createServer(app);
+const io = require('socket.io')(server);
+const SESSION_FILE_PATH = 'session.json';
+const PORT = process.env.PORT || 4000;
+
 // Configurações do multer
 const storage = multer.memoryStorage(); // Armazena o arquivo em memória
 const upload = multer({ storage: storage });
@@ -35,6 +40,9 @@ const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
     // Atualiza o progresso
     progress.current = index + 1;
 
+    io.emit('progress', progress);
+
+
     // Aguarda 3 minutos antes do próximo envio
     if (index < jsonData.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 3 * 60 * 1000));
@@ -43,10 +51,7 @@ const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
 };
 const app = express();
 
-const server = http.createServer(app);
-const io = require('socket.io')(server);
-const SESSION_FILE_PATH = 'session.json';
-const PORT = process.env.PORT || 4000;
+
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -66,11 +71,7 @@ let progress = { current: 0, total: 0 };
 
 
 
-// Adicione esta rota ao código do servidor
-app.get('/get-progress', (req, res) => {
-  // Retorna os dados de progresso como JSON
-  res.json(progress);
-});
+
 
 app.get('/zap', async (req, res) => {
   try {
@@ -100,13 +101,15 @@ console.log(isClientReady)
 
 // Rota para renderizar a página de envio de mensagem com CSV
 app.get('/zap-csv', (req, res) => {
-  return res.render('zap-csv', { error: null, success: null,progress  });
+  return res.render('zap-csv', { error: null, success: null  });
 });
 
 
 // Configuração do Socket.IO
 io.on('connection', (socket) => {
   console.log('Client connected');
+
+  socket.emit('progress', progress);
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
@@ -132,16 +135,16 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
         // Envia mensagens com base nos dados JSON
         await sendMessagesFromJSON(jsonData, message, []);
 
-        return res.render('zap-csv', { success: 'Mensagens enviadas com sucesso', error: null,progress  });
+        return res.render('zap-csv', { success: 'Mensagens enviadas com sucesso', error: null  });
       } else {
-        return res.render('zap-csv', { error: 'Arquivo CSV não fornecido', success: null,progress  });
+        return res.render('zap-csv', { error: 'Arquivo CSV não fornecido', success: null  });
       }
     } else {
-      return res.render('zap-csv', { error: 'O cliente não está pronto ainda', success: null,progress  });
+      return res.render('zap-csv', { error: 'O cliente não está pronto ainda', success: null  });
     }
   } catch (error) {
     console.error('Erro ao enviar mensagem:', error.message);
-    return res.render('zap-csv', { error: 'Erro ao enviar mensagem', success: null,progress  });
+    return res.render('zap-csv', { error: 'Erro ao enviar mensagem', success: null  });
   }
 });
 
