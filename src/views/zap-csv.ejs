@@ -79,6 +79,10 @@
   </style>
 </head>
 <body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io()
+  </script>
   <form action="/zap-csv" method="POST" enctype="multipart/form-data">
     <h1>Send WhatsApp Message</h1>
     <% if (error) { %>

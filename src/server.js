@@ -177,7 +177,7 @@ app.get('/qr', async (req, res) => {
 
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor ligado na porta ${PORT}`);
 });
 
