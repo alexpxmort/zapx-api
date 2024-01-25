@@ -92,14 +92,18 @@ button:disabled {
     const socket = io()
     // Listen for progress updates
   socket.on('progress', (progress) => {
-    document.getElementById('btn').setAttribute('disabled',true)
     updateProgress(progress);
   });
 
   function updateProgress(progress) {
     const progressElement = document.getElementById('progress');
     if (progress.total > 0) {
-      progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total} enviadas`;
+      document.getElementById('btn').setAttribute('disabled',true)
+      progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total} mensagens enviadas`;
+
+      if(progress.current === progress.total ){
+        document.getElementById('btn').removeAttribute('disabled')
+      }
     }
   } 
   </script>
