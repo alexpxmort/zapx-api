@@ -8,6 +8,8 @@ const multer = require('multer');
 const csvtojson = require('csvtojson');
 const http = require('http');
 
+let qrDataUrl = '';
+
 dotenv.config();
 
 const app = express();
@@ -150,36 +152,34 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
 });
 
 
-
-
 app.get('/qr', (req, res) => {
-  try {
-    client.on('qr', async (qr) => {
-      try {
-        const dataUrl = await new Promise((resolve, reject) => {
-          qrcode.toDataURL(qr, (err, dataUrl) => {
-            if (err) {
-              console.error('Error generating QR Code:', err);
-              reject(err);
-            } else {
-              resolve(dataUrl);
-            }
-          });
-        });
-        
-        res.render('qr', { qrImage: dataUrl });
-      } catch (err) {
-        console.error('Error generating QR Code:', err);
-        res.status(500).send('Error generating QR Code');
-      }
-    });
-  } catch (err) {
-    console.error('Error during QR event:', err);
-    res.status(500).send('Error during QR event');
+  if (qrDataUrl) {
+    res.render('qr', { qrImage: qrDataUrl });
+  } else {
+    res.send('QR Code not generated yet');
   }
 });
 
 
+
+client.on('qr', async (qr) => {
+  try {
+    qrDataUrl = await new Promise((resolve, reject) => {
+      qrcode.toDataURL(qr, (err, dataUrl) => {
+        if (err) {
+          console.error('Error generating QR Code:', err);
+          reject(err);
+        } else {
+          resolve(dataUrl);
+        }
+      });
+    });
+
+    
+  } catch (err) {
+    console.error('Error generating QR Code:', err);
+  }
+});
 
  
             
