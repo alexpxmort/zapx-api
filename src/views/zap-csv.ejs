@@ -8,14 +8,12 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
     }
 
     form {
@@ -55,15 +53,8 @@
       background-color: #45a049;
     }
 
-    .loading {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: none; /* Inicialmente oculto */
-    }
+    
 
-    /* Estilos para o campo de seleção de arquivo */
     #csvFile {
       margin-bottom: 16px;
     }
@@ -84,6 +75,23 @@ button:disabled {
   /* Outros estilos desejados para quando o botão estiver desativado */
 }
 
+.loading-spinner {
+  border: 8px solid rgba(0, 0, 0, 0.1);
+  border-top: 8px solid #4CAF50; /* Cor verde */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: block;
+  margin: auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
   </style>
 </head>
 <body>
@@ -95,13 +103,17 @@ button:disabled {
     updateProgress(progress);
   });
 
+
+
   function updateProgress(progress) {
     const progressElement = document.getElementById('progress');
     if (progress.total > 0) {
+      document.getElementById('loading').style = 'display:block;'
       document.getElementById('btn').setAttribute('disabled',true)
       progressElement.innerHTML = `Progresso: ${progress.current} de ${progress.total} mensagens enviadas`;
 
       if(progress.current === progress.total ){
+        document.getElementById('loading').style = 'display:none;'
         document.getElementById('btn').removeAttribute('disabled')
       }
     }
@@ -123,13 +135,16 @@ button:disabled {
     <label id="csvFileLabel" for="csvFile">Arquivo CSV:</label>
     <input type="file" id="csvFile" name="csvFile" accept=".csv">
 
-    <!-- Adicionando ícone de loading -->
     <button type="submit" id="btn">
       Enviar
     </button>
 
+  
     <div id="progress">
     </div>
+
+    <div id="loading" style="display: none;" class="loading-spinner"></div>
+
   </form>
 
 </body>

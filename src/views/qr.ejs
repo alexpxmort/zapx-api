@@ -6,6 +6,18 @@
     <title>QR Code</title>
 </head>
 <body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io()
+
+        socket.on('isClientReady',(value) =>{
+            console.log(value)
+
+            if(value){
+                window.location.href = '/zap-csv'
+            }
+        })
+    </script>
     <img src="<%= qrImage %>" alt="QR Code">
 </body>
 </html>

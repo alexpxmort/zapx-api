@@ -36,7 +36,6 @@ const csvToJSON = async (csvFileBuffer) => {
 // Função para enviar mensagens com base nos dados JSON e nas colunas selecionadas
 const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
   progress = { current: 0, total: jsonData.length };
-
   for (const [index, contact] of jsonData.entries()) {
 
     // Envia a mensagem concatenada para o número de telefone
@@ -47,7 +46,6 @@ const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
 
     io.emit('progress', progress);
 
-
     // Aguarda 30 segundos antes do próximo envio
     if (index < jsonData.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 30 * 1000));
@@ -57,12 +55,17 @@ const sendMessagesFromJSON = async (jsonData, message, selectedColumns) => {
 
 
 const client = new Client({
-  authStrategy: new LocalAuth(),
+  authStrategy: new LocalAuth(
+    {
+      dataPath:'client'
+    }
+  ),
   puppeteer: {
     headless:'new',
     args: ['--no-sandbox'],
   },
 });
+
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -153,6 +156,8 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
 
 
 app.get('/qr', (req, res) => {
+  io.emit('isClientReady',isClientReady)
+
   if (qrDataUrl) {
     res.render('qr', { qrImage: qrDataUrl });
   } else {
@@ -197,6 +202,7 @@ client.on('ready', () => {
   console.log('Cliente pronto!');
   // Set the flag to indicate that the client is ready
   isClientReady = true;
+  io.emit('isClientReady',isClientReady)
 
    
   
