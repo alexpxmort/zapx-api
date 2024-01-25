@@ -150,25 +150,35 @@ app.post('/zap-csv', upload.single('csvFile'), async (req, res) => {
 });
 
 
-app.get('/qr', async (req, res) => {
+
+
+app.get('/qr', (req, res) => {
   try {
-    let qr = await new Promise((resolve, reject) => {
-      client.on('qr', (qr) => {
-        qrcode.toDataURL(qr, (err, dataUrl) => {
-          if (err) {
-            console.error('Erro ao gerar QR Code:', err);
-            return res.status(500).send('Erro ao gerar QR Code');
-          } else {
-            return res.render('qr', { qrImage: dataUrl });
-          }
+    client.on('qr', async (qr) => {
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          qrcode.toDataURL(qr, (err, dataUrl) => {
+            if (err) {
+              console.error('Error generating QR Code:', err);
+              reject(err);
+            } else {
+              resolve(dataUrl);
+            }
+          });
         });
-      });
+        
+        res.render('qr', { qrImage: dataUrl });
+      } catch (err) {
+        console.error('Error generating QR Code:', err);
+        res.status(500).send('Error generating QR Code');
+      }
     });
   } catch (err) {
-    console.error('Erro ao gerar QR Code:', err);
-    res.status(500).send('Erro ao gerar QR Code');
+    console.error('Error during QR event:', err);
+    res.status(500).send('Error during QR event');
   }
 });
+
 
 
  
