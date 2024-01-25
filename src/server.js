@@ -164,6 +164,7 @@ app.get('/qr', (req, res) => {
 
 client.on('qr', async (qr) => {
   try {
+    console.log(qr)
     qrDataUrl = await new Promise((resolve, reject) => {
       qrcode.toDataURL(qr, (err, dataUrl) => {
         if (err) {
